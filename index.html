@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente CAB - Control CAB</title>
+    <title>Control CAB</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #121212; overflow: hidden; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center;}
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #121212; overflow: hidden; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 30px;}
         
         #face-container { display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s ease; margin-bottom: 20px;}
-        .eyes { display: flex; gap: 50px; margin-bottom: 40px; }
-        .eye { width: 60px; height: 60px; background-color: #00e676; border-radius: 50%; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(0, 230, 118, 0.5); }
-        .mouth { width: 120px; height: 15px; background-color: #00e676; border-radius: 20px; transition: all 0.2s ease; box-shadow: 0 0 15px rgba(0, 230, 118, 0.5); }
+        .eyes { display: flex; gap: 40px; margin-bottom: 30px; }
+        .eye { width: 50px; height: 50px; background-color: #00e676; border-radius: 50%; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(0, 230, 118, 0.5); }
+        .mouth { width: 100px; height: 15px; background-color: #00e676; border-radius: 20px; transition: all 0.2s ease; box-shadow: 0 0 15px rgba(0, 230, 118, 0.5); }
         
         .estado-reposo .eye { animation: blink 4s infinite; }
         @keyframes blink { 0%, 95%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
@@ -18,32 +18,78 @@
         .estado-escuchando .mouth { width: 40px; height: 40px; border-radius: 50%; background-color: #00b0ff; }
         .estado-procesando .eye { background-color: #ffea00; animation: think 1s infinite alternate cubic-bezier(0.45, 0.05, 0.55, 0.95); }
         .estado-procesando .mouth { width: 60px; background-color: #ffea00; }
-        @keyframes think { 0% { transform: translateX(-20px); } 100% { transform: translateX(20px); } }
+        @keyframes think { 0% { transform: translateX(-15px); } 100% { transform: translateX(15px); } }
         .estado-respondiendo .eye { background-color: #00e676; }
-        .estado-respondiendo .mouth { animation: talk 0.15s infinite alternate; }
-        @keyframes talk { 0% { transform: scaleY(1); } 100% { transform: scaleY(4); border-radius: 40%; } }
+        .estado-respondiendo .mouth { border-radius: 40%; transform: scaleY(2); }
         
-        /* NUEVO: PANEL DE LECTURA (TELEPROMPTER) */
+        /* Pantalla de lectura mejorada */
         #pantalla-texto {
-            display: none; /* Oculto por defecto */
-            width: 85%;
+            display: none;
+            width: 90%;
             max-width: 600px;
             background-color: #1e1e1e;
             color: #00e676;
-            padding: 20px;
-            border-radius: 12px;
-            font-size: 18px;
-            line-height: 1.6;
-            max-height: 35vh; /* Ocupa hasta el 35% de la pantalla */
-            overflow-y: auto; /* Permite hacer scroll */
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            line-height: 1.5;
+            max-height: 40vh; 
+            overflow-y: auto; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             border: 1px solid #333;
-            margin-bottom: 80px;
+            margin-bottom: 10px;
+            white-space: pre-wrap; /* Esto hace que respete los saltos de línea sin usar HTML */
         }
 
-        .controls { position: absolute; bottom: 20px; display: flex; gap: 10px; width: 100%; justify-content: center; }
-        button { padding: 15px 25px; border: none; border-radius: 5px; background: #333; color: white; font-weight: bold; cursor: pointer; font-size: 16px;}
-        button:hover { background: #555; }
+        /* Contenedor de botones nuevos */
+        .controls-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 90%;
+            max-width: 600px;
+            margin-bottom: 20px;
+            margin-top: auto; /* Empuja los controles hacia abajo */
+            padding-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #2a2a2a;
+            color: white;
+            font-size: 16px;
+        }
+
+        .btn-action {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            color: white;
+            transition: background 0.2s;
+        }
+
+        .btn-mic { background: #00b0ff; }
+        .btn-mic:hover { background: #0081cb; }
+        
+        .btn-send { background: #ff9100; }
+        .btn-send:hover { background: #c57000; }
+        
+        .btn-play { background: #00e676; color: #121212; display: none; margin-top: 5px; margin-bottom: 20px;}
+        .btn-play:hover { background: #00b25c; }
+        .btn-play:disabled { background: #555; cursor: not-allowed; }
+
     </style>
 </head>
 <body>
@@ -56,24 +102,34 @@
     </div>
 
     <div id="pantalla-texto"></div>
+    <button id="btn-reproducir" class="btn-action btn-play" onclick="reproducirAudio()">🔊 Escuchar Respuesta</button>
 
-    <div class="controls">
-        <button onclick="iniciarInteraccion()">Hablar con CAB</button>
+    <div class="controls-container">
+        <button class="btn-action btn-mic" onclick="iniciarInteraccion()">🎙️ Hablar con CAB</button>
+        <div class="input-group">
+            <input type="text" id="texto-input" placeholder="O escribe tu consulta aquí..." onkeypress="manejarEnter(event)">
+            <button class="btn-action btn-send" onclick="enviarTexto()">Enviar</button>
+        </div>
     </div>
 
     <script>
         const face = document.getElementById('face-container');
         const pantallaTexto = document.getElementById('pantalla-texto');
+        const inputTexto = document.getElementById('texto-input');
+        const btnReproducir = document.getElementById('btn-reproducir');
         
+        let ultimoAudioB64 = null;
+        let audioPlayer = null;
+
         function setEstado(nuevoEstado) {
             face.className = ''; 
             face.classList.add(nuevoEstado);
         }
 
-        // RECUERDA: Si cambia tu IP, debes actualizarla aquí
         const socket = new WebSocket('wss://cerebro-cab.onrender.com');
+
         socket.onopen = function(e) {
-            console.log("Conectado exitosamente al backend");
+            console.log("Conectado a la nube");
         };
 
         socket.onmessage = function(event) {
@@ -81,60 +137,92 @@
             
             if (data.estado) {
                 setEstado(data.estado);
-                // Si vuelve a reposo o empieza a escuchar, podemos atenuar el texto o dejarlo
                 if(data.estado === 'estado-escuchando') {
                     pantallaTexto.innerHTML = "<em>Escuchando...</em>";
                     pantallaTexto.style.display = 'block';
+                    btnReproducir.style.display = 'none';
                 }
                 if(data.estado === 'estado-procesando') {
-                    pantallaTexto.innerHTML = "<em>Buscando en los manuales de Control CAB...</em>";
+                    pantallaTexto.innerHTML = "<em>Analizando manuales...</em>";
+                    btnReproducir.style.display = 'none';
                 }
             }
 
-            // NUEVO: Mostrar el texto en pantalla
             if (data.texto_pantalla) {
-                pantallaTexto.innerHTML = data.texto_pantalla;
+                // Usamos innerText para que los saltos de línea se vean perfectos sin HTML
+                pantallaTexto.innerText = data.texto_pantalla; 
                 pantallaTexto.style.display = 'block';
             }
             
             if (data.audio) {
-                const audioRepro = new Audio("data:audio/mp3;base64," + data.audio);
-                audioRepro.play();
-                
-                audioRepro.onended = function() {
-                    setEstado('estado-reposo');
-                };
-            } else if (data.texto) {
-                window.speechSynthesis.cancel();
-                let vozActual = new SpeechSynthesisUtterance(data.texto);
-                window.speechSynthesis.speak(vozActual);
+                ultimoAudioB64 = data.audio;
+                btnReproducir.style.display = 'block'; // Muestra el botón de Play
+                btnReproducir.innerText = "🔊 Escuchar Respuesta";
+                btnReproducir.disabled = false;
             }
         };
 
+        // REPRODUCCIÓN MANUAL
+        function reproducirAudio() {
+            if (ultimoAudioB64) {
+                btnReproducir.innerText = "🔊 Reproduciendo...";
+                btnReproducir.disabled = true;
+                setEstado('estado-respondiendo');
+                
+                if(audioPlayer) audioPlayer.pause(); 
+                
+                audioPlayer = new Audio("data:audio/mp3;base64," + ultimoAudioB64);
+                audioPlayer.play();
+                
+                audioPlayer.onended = function() {
+                    setEstado('estado-reposo');
+                    btnReproducir.innerText = "🔊 Escuchar Respuesta";
+                    btnReproducir.disabled = false;
+                };
+            }
+        }
+
+        // ENVIAR POR VOZ
         const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const reconocimientoVoz = new Reconocimiento();
-        reconocimientoVoz.lang = 'es-AR'; 
-        reconocimientoVoz.interimResults = false;
+        let reconocimientoVoz = null;
+        if(Reconocimiento) {
+            reconocimientoVoz = new Reconocimiento();
+            reconocimientoVoz.lang = 'es-AR'; 
+            reconocimientoVoz.interimResults = false;
 
-        reconocimientoVoz.onresult = function(event) {
-            const textoEscuchado = event.results[0][0].transcript;
-            socket.send(JSON.stringify({ accion: "procesar_texto", texto: textoEscuchado }));
-        };
+            reconocimientoVoz.onresult = function(event) {
+                const textoEscuchado = event.results[0][0].transcript;
+                socket.send(JSON.stringify({ accion: "procesar_texto", texto: textoEscuchado }));
+            };
 
-        reconocimientoVoz.onerror = function(event) {
-            setEstado('estado-reposo'); 
-            pantallaTexto.innerHTML = "<em>Error al escuchar. Intenta nuevamente.</em>";
-        };
+            reconocimientoVoz.onerror = function(event) {
+                setEstado('estado-reposo'); 
+                pantallaTexto.innerHTML = "<em>No se escuchó bien. Intenta de nuevo.</em>";
+            };
+        }
 
         function iniciarInteraccion() {
-            if(socket.readyState === WebSocket.OPEN) {
-                const audioVacio = new Audio("data:audio/mp3;base64,");
-                audioVacio.play().catch(e => console.log("Audio desbloqueado"));
-                
+            if(socket.readyState === WebSocket.OPEN && reconocimientoVoz) {
                 reconocimientoVoz.start();
                 setEstado('estado-escuchando');
             } else {
-                alert("El servidor de Python no está conectado.");
+                alert("Espera a que se conecte el servidor...");
+            }
+        }
+
+        // ENVIAR POR TEXTO
+        function enviarTexto() {
+            const texto = inputTexto.value.trim();
+            if(texto !== "" && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ accion: "procesar_texto", texto: texto }));
+                inputTexto.value = ""; // Limpiar el input después de enviar
+            }
+        }
+
+        // Permitir enviar con la tecla Enter
+        function manejarEnter(event) {
+            if (event.key === "Enter") {
+                enviarTexto();
             }
         }
     </script>

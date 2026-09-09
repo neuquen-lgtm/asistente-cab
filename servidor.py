@@ -10,7 +10,6 @@ API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "").strip()
 VOICE_ID = "6Mo5ciGH5nWiQacn5FYk" 
 
-# Conectamos el cable oficial de Google
 if API_KEY:
     genai.configure(api_key=API_KEY)
 
@@ -53,13 +52,20 @@ def obtener_respuesta_gemini(texto_usuario):
         f"El técnico pregunta: {texto_usuario}"
     )
 
-    try:
-        # Aquí la magia: Google elige el modelo y la ruta correcta automáticamente
-        modelo = genai.GenerativeModel('gemini-1.5-flash')
-        respuesta = modelo.generate_content(mensaje_completo)
-        return respuesta.text
-    except Exception as e:
-        return f"Error SDK Google: {str(e)}"
+    # CÓDIGO INDESTRUCTIBLE: Prueba varios modelos en cascada por si Google falla
+    modelos_a_probar = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.0-pro', 'gemini-pro']
+    ultimo_error = ""
+    
+    for nombre_modelo in modelos_a_probar:
+        try:
+            modelo = genai.GenerativeModel(nombre_modelo)
+            respuesta = modelo.generate_content(mensaje_completo)
+            return respuesta.text
+        except Exception as e:
+            ultimo_error = str(e)
+            continue # Si este modelo falla, salta automáticamente al siguiente
+            
+    return f"Google rechazó todos los modelos. Último error: {ultimo_error}"
 
 def obtener_audio_elevenlabs(texto):
     if not ELEVENLABS_API_KEY:

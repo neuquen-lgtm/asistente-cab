@@ -71,8 +71,7 @@
         }
 
         // RECUERDA: Si cambia tu IP, debes actualizarla aquí
-        const socket = new WebSocket('ws://192.168.0.60:8765');
-
+        const socket = new WebSocket('wss://cerebro-cab.onrender.com');
         socket.onopen = function(e) {
             console.log("Conectado exitosamente al backend");
         };

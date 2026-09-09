@@ -14,7 +14,12 @@ ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
 VOICE_ID = "6Mo5ciGH5nWiQacn5FYk" 
 
 def obtener_respuesta_gemini(texto_usuario):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key={API_KEY}"
+    # Verificamos si Render cargó bien la llave
+    if not API_KEY:
+        return "Error: Falta la llave GEMINI_API_KEY en Render o está mal escrita."
+
+    # Usamos el modelo oficial, rápido y estable de Google
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
     
     procedimientos_texto = ""
     try:
@@ -34,21 +39,20 @@ def obtener_respuesta_gemini(texto_usuario):
             if mejores_manuales:
                 procedimientos_texto = json.dumps(mejores_manuales, ensure_ascii=False)
             else:
-                procedimientos_texto = "No hay manuales sobre esto."
+                procedimientos_texto = "No hay manuales específicos, pero intentaré ayudar."
                 
     except Exception as e:
         procedimientos_texto = "Base de datos no disponible."
 
-    # ¡NUEVA PERSONALIDAD: DIRECTA Y SIN ETIQUETAS!
     mensaje_completo = (
         "Eres 'CAB', Asistente Técnica de 'Control CAB'.\n"
         "Usa este manual para responder:\n"
         f"{procedimientos_texto}\n\n"
         "TUS REGLAS OBLIGATORIAS:\n"
-        "1. SÉ EXTREMADAMENTE DIRECTA Y BREVE. No des introducciones, ni saludos largos, ni expliques cosas desde el principio si no te lo piden explícitamente.\n"
+        "1. SÉ EXTREMADAMENTE DIRECTA Y BREVE. No des introducciones ni expliques desde el principio.\n"
         "2. Ve directo al paso o a la solución que necesita el técnico.\n"
-        "3. NO uses asteriscos (*), ni negritas, ni etiquetas HTML como <br>. Usa saltos de línea normales.\n"
-        "4. Habla con oraciones cortas y separadas por puntos para que la voz respire.\n"
+        "3. NO uses asteriscos (*), ni negritas, ni etiquetas HTML.\n"
+        "4. Habla con oraciones cortas y separadas por puntos.\n"
         f"El técnico pregunta: {texto_usuario}"
     )
 
@@ -56,17 +60,18 @@ def obtener_respuesta_gemini(texto_usuario):
         "contents": [{"role": "user", "parts": [{"text": mensaje_completo}]}]
     }
 
-    for intento in range(5):
+    for intento in range(3):
         try:
             respuesta = requests.post(url, json=payload, verify=False)
             datos = respuesta.json()
             if 'error' in datos:
                 mensaje_error = datos['error'].get('message', 'Error desconocido')
-                if "high demand" in mensaje_error.lower() or "overloaded" in mensaje_error.lower() or "503" in str(mensaje_error) or "429" in str(mensaje_error):
+                if "high demand" in mensaje_error.lower() or "overloaded" in mensaje_error.lower():
                     time.sleep(4)
                     continue
                 else:
-                    return "Error de permisos en la base de datos."
+                    # ¡AHORA VEREMOS EL ERROR REAL EN PANTALLA!
+                    return f"Error interno de Google: {mensaje_error}"
             return datos['candidates'][0]['content']['parts'][0]['text']
         except Exception as e:
             time.sleep(4)
@@ -74,6 +79,9 @@ def obtener_respuesta_gemini(texto_usuario):
     return "Servidores saturados. Intenta en un minuto."
 
 def obtener_audio_elevenlabs(texto):
+    if not ELEVENLABS_API_KEY:
+        return None
+        
     texto_limpio = texto.replace("*", "").replace("_", "") 
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}"
     headers = {
@@ -106,7 +114,6 @@ async def logica_asistente(websocket):
                 respuesta_ia = obtener_respuesta_gemini(texto_recibido)
                 audio_b64 = obtener_audio_elevenlabs(respuesta_ia)
 
-                # Enviamos el texto y el audio, pero ya NO hacemos sleep porque el audio no suena automático
                 await websocket.send(json.dumps({
                     "estado": "estado-respondiendo",
                     "audio": audio_b64,

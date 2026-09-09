@@ -2,25 +2,21 @@ import asyncio
 import websockets
 import json
 import requests
-import urllib3
 import base64
-import time
-import os 
+import os
+import google.generativeai as genai
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-# Limpiamos cualquier espacio en blanco accidental en las llaves
 API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "").strip()
 VOICE_ID = "6Mo5ciGH5nWiQacn5FYk" 
 
+# Conectamos el cable oficial de Google
+if API_KEY:
+    genai.configure(api_key=API_KEY)
+
 def obtener_respuesta_gemini(texto_usuario):
     if not API_KEY:
         return "Error: Falta la llave de Google en Render."
-
-    # ¡Volvemos al modelo flash súper rápido y estable!
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
-    headers = {'Content-Type': 'application/json'}
     
     procedimientos_texto = ""
     try:
@@ -57,26 +53,13 @@ def obtener_respuesta_gemini(texto_usuario):
         f"El técnico pregunta: {texto_usuario}"
     )
 
-    payload = {
-        "contents": [{"role": "user", "parts": [{"text": mensaje_completo}]}]
-    }
-
-    for intento in range(3):
-        try:
-            respuesta = requests.post(url, headers=headers, json=payload, verify=False)
-            datos = respuesta.json()
-            if 'error' in datos:
-                mensaje_error = datos['error'].get('message', 'Error desconocido')
-                if "high demand" in mensaje_error.lower() or "overloaded" in mensaje_error.lower():
-                    time.sleep(4)
-                    continue
-                else:
-                    return f"Error interno de Google: {mensaje_error}"
-            return datos['candidates'][0]['content']['parts'][0]['text']
-        except Exception as e:
-            time.sleep(4)
-            
-    return "Servidores saturados. Intenta de nuevo."
+    try:
+        # Aquí la magia: Google elige el modelo y la ruta correcta automáticamente
+        modelo = genai.GenerativeModel('gemini-1.5-flash')
+        respuesta = modelo.generate_content(mensaje_completo)
+        return respuesta.text
+    except Exception as e:
+        return f"Error SDK Google: {str(e)}"
 
 def obtener_audio_elevenlabs(texto):
     if not ELEVENLABS_API_KEY:

@@ -9,7 +9,7 @@ import os
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# .strip() elimina cualquier espacio oculto o salto de línea accidental que se haya copiado
+# Limpiamos cualquier espacio en blanco accidental en las llaves
 API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "").strip()
 VOICE_ID = "6Mo5ciGH5nWiQacn5FYk" 
@@ -18,8 +18,8 @@ def obtener_respuesta_gemini(texto_usuario):
     if not API_KEY:
         return "Error: Falta la llave de Google en Render."
 
-    # Ruta oficial más reciente y estable
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={API_KEY}"
+    # ¡Volvemos al modelo flash súper rápido y estable!
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
     headers = {'Content-Type': 'application/json'}
     
     procedimientos_texto = ""

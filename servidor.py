@@ -14,12 +14,11 @@ ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
 VOICE_ID = "6Mo5ciGH5nWiQacn5FYk" 
 
 def obtener_respuesta_gemini(texto_usuario):
-    # Verificamos si Render cargó bien la llave
     if not API_KEY:
         return "Error: Falta la llave GEMINI_API_KEY en Render o está mal escrita."
 
-    # Usamos el modelo oficial, rápido y estable de Google
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+    # CAMBIO AQUÍ: Usamos el modelo 'gemini-pro' que es 100% estable y compatible
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={API_KEY}"
     
     procedimientos_texto = ""
     try:
@@ -70,7 +69,6 @@ def obtener_respuesta_gemini(texto_usuario):
                     time.sleep(4)
                     continue
                 else:
-                    # ¡AHORA VEREMOS EL ERROR REAL EN PANTALLA!
                     return f"Error interno de Google: {mensaje_error}"
             return datos['candidates'][0]['content']['parts'][0]['text']
         except Exception as e:

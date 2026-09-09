@@ -9,16 +9,18 @@ import os
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-API_KEY = os.environ.get("GEMINI_API_KEY")
-ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
+# .strip() elimina cualquier espacio oculto o salto de línea accidental que se haya copiado
+API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
+ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "").strip()
 VOICE_ID = "6Mo5ciGH5nWiQacn5FYk" 
 
 def obtener_respuesta_gemini(texto_usuario):
     if not API_KEY:
-        return "Error: Falta la llave GEMINI_API_KEY en Render o está mal escrita."
+        return "Error: Falta la llave de Google en Render."
 
-    # CAMBIO AQUÍ: Usamos el modelo 'gemini-pro' que es 100% estable y compatible
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+    # Ruta oficial más reciente y estable
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={API_KEY}"
+    headers = {'Content-Type': 'application/json'}
     
     procedimientos_texto = ""
     try:
@@ -61,7 +63,7 @@ def obtener_respuesta_gemini(texto_usuario):
 
     for intento in range(3):
         try:
-            respuesta = requests.post(url, json=payload, verify=False)
+            respuesta = requests.post(url, headers=headers, json=payload, verify=False)
             datos = respuesta.json()
             if 'error' in datos:
                 mensaje_error = datos['error'].get('message', 'Error desconocido')
@@ -74,7 +76,7 @@ def obtener_respuesta_gemini(texto_usuario):
         except Exception as e:
             time.sleep(4)
             
-    return "Servidores saturados. Intenta en un minuto."
+    return "Servidores saturados. Intenta de nuevo."
 
 def obtener_audio_elevenlabs(texto):
     if not ELEVENLABS_API_KEY:

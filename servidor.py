@@ -18,7 +18,7 @@ def obtener_respuesta_gemini(texto_usuario):
         return "Error: Falta la llave GEMINI_API_KEY en Render o está mal escrita."
 
     # CAMBIO AQUÍ: Usamos el modelo 'gemini-pro' que es 100% estable y compatible
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
     
     procedimientos_texto = ""
     try:
